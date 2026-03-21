@@ -2,7 +2,6 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
-# 🔥 LOAD ENV VARIABLES
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -21,10 +20,13 @@ def generate_answer(query: str, context_chunks: list):
     prompt = f"""
 You are an AI assistant helping with an admin system.
 
-Answer the user query based ONLY on the context below.
+Use the provided context to answer the question.
 
-If the answer is not found, say:
-"I could not find this in the documentation."
+IMPORTANT RULES:
+- You can rephrase and summarize the content.
+- You can infer meaning if wording is slightly different (e.g., "amend" = "update").
+- Do NOT say "not found" unless the context is completely unrelated.
+- Prefer giving a helpful answer based on available context.
 
 ---
 
@@ -38,7 +40,7 @@ Question:
 
 ---
 
-Answer:
+Answer clearly and helpfully:
 """
 
     response = client.chat.completions.create(
@@ -47,7 +49,7 @@ Answer:
             {"role": "system", "content": "You are a helpful admin assistant."},
             {"role": "user", "content": prompt}
         ],
-        temperature=0.2
+        temperature=0.3   # 🔥 slightly increased for better reasoning
     )
 
     return response.choices[0].message.content
