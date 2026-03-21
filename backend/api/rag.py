@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from rag.retriever import search
+from services.tracing import start_trace, end_trace
 
 router = APIRouter()
 
@@ -12,9 +13,11 @@ class QueryRequest(BaseModel):
 
 @router.post("/query")
 def query_rag(request: QueryRequest):
-    results = search(request.query, request.top_k)
+    trace = start_trace("rag_query")
 
-    return {
-        "query": request.query,
-        "results": results
-    }
+    try:
+        result = search(request.query, request.top_k)
+        return result
+
+    finally:
+        end_trace(trace)

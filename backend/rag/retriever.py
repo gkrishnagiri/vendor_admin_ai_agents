@@ -2,6 +2,7 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 from openai import OpenAI
+from services.llm_service import generate_answer
 
 load_dotenv()
 
@@ -23,10 +24,12 @@ def search(query, top_k=3):
     query_embedding = get_embedding(query)
     embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
 
+    # 🔥 IMPORTANT: include document name for source
     cur.execute("""
-        SELECT content
-        FROM chunks
-        ORDER BY embedding <-> %s::vector
+        SELECT c.content, d.name
+        FROM chunks c
+        JOIN documents d ON c.document_id = d.id
+        ORDER BY c.embedding <-> %s::vector
         LIMIT %s
     """, (embedding_str, top_k))
 
@@ -35,4 +38,17 @@ def search(query, top_k=3):
     cur.close()
     conn.close()
 
-    return [r[0] for r in results]
+    # Prepare context for LLM
+    context_chunks = [
+        {"content": r[0], "source": r[1]}
+        for r in results
+    ]
+
+    # 🔥 LLM CALL
+    answer = generate_answer(query, context_chunks)
+
+    return {
+        "query": query,
+        "answer": answer,
+        "sources": [c["source"] for c in context_chunks]
+    }

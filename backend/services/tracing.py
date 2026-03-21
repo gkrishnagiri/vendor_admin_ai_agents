@@ -1,8 +1,21 @@
-import os
 from openai import OpenAI
+import os
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-def get_client():
-    return client
+def start_trace(name: str):
+    try:
+        return client.beta.traces.create(name=name)
+    except Exception:
+        return None
+
+
+def end_trace(trace):
+    if trace is None:
+        return
+
+    try:
+        client.beta.traces.update(trace.id, status="completed")
+    except Exception:
+        pass
