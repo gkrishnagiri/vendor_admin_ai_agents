@@ -2,17 +2,16 @@ from services.intent_classifier import classify_intent
 from rag.retriever import search
 
 
-def orchestrate(query: str, trace=None):
-    """
-    Main brain of the system
-    """
+def orchestrate(query: str, trace=None, top_k=3):
+
+    print(f"\n[Orchestrator] Received query: {query}")
 
     intent = classify_intent(query, trace)
 
-    print(f"[Orchestrator] Intent: {intent}")
+    print(f"[Orchestrator] Detected Intent: {intent}")
 
     if intent == "RAG":
-        return search(query, trace)
+        return search(query, top_k, trace)
 
     elif intent == "ACTION":
         return {
