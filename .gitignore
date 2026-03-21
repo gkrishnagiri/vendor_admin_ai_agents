@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+.venv/
+env/
+venv/
+
+# Environment variables (IMPORTANT)
+.env
+
+# Node (frontend later)
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Database / local files
+*.sqlite3
+
+# Playwright
+playwright-report/
+test-results/
