@@ -15,7 +15,7 @@ def query_rag(request: QueryRequest):
     trace = start_trace("orchestrator")
 
     try:
-        result = orchestrate(request.query)
+        result = orchestrate(request.query, trace)
         return result
 
     finally:

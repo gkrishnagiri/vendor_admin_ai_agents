@@ -17,7 +17,7 @@ def get_embedding(text):
     return response.data[0].embedding
 
 
-def search(query, top_k=3):
+def search(query, top_k=3, trace=None):
     conn = psycopg2.connect(os.getenv("DATABASE_URL"))
     cur = conn.cursor()
 
@@ -45,8 +45,8 @@ def search(query, top_k=3):
     ]
 
     # 🔥 LLM CALL
-    answer = generate_answer(query, context_chunks)
-
+    answer = generate_answer(query, context_chunks, trace)
+    
     return {
         "query": query,
         "answer": answer,
