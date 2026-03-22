@@ -1,8 +1,14 @@
-from retriever import search
+from rag.retriever import search
 
-query = "how to fix docker issue"
+query = "how to create a user"
 
-results = search(query)
+result = search(query, top_k=5)
 
-for r in results:
-    print("\n---\n", r[:300])
+print("\nQUERY:", result["query"])
+
+print("\n--- ANSWER ---\n")
+print(result["answer"])
+
+print("\n--- SOURCES ---\n")
+for s in result["sources"]:
+    print(s)

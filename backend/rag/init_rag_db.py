@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS chunks (
     id SERIAL PRIMARY KEY,
     document_id INT,
     content TEXT,
+    section TEXT,          -- NEW
+    chunk_index INT,       -- NEW
     embedding VECTOR(1536)
 );
 """)

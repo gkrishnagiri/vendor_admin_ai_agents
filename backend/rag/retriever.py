@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from services.llm_service import generate_answer
 from agents.tracing import trace
+from services.query_rewriter import rewrite_query
 
 load_dotenv()
 
@@ -24,7 +25,13 @@ def search(query, top_k=3):
     conn = psycopg2.connect(os.getenv("DATABASE_URL"))
     cur = conn.cursor()
 
-    query_embedding = get_embedding(query)
+    rewritten_query = rewrite_query(query)
+
+    print("\n[Retriever] Original Query:", query)
+    print("[Retriever] Rewritten Query:", rewritten_query)
+
+    query_embedding = get_embedding(rewritten_query)
+    
     embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
 
     cur.execute("""
