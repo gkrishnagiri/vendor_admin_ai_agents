@@ -14,5 +14,4 @@ class QueryRequest(BaseModel):
 @router.post("/query")
 def query_rag(request: QueryRequest):
 
-    with trace("orchestrator_api"):
-        return orchestrate(request.query, top_k=request.top_k)
+    return orchestrate(request.query, top_k=request.top_k)

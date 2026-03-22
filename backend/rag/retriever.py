@@ -12,45 +12,40 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def get_embedding(text):
 
-    with trace("embedding_generation"):
-
-        response = client.embeddings.create(
-            model="text-embedding-3-small",
-            input=text
-        )
-        return response.data[0].embedding
+    response = client.embeddings.create(
+        model="text-embedding-3-small",
+        input=text
+    )
+    return response.data[0].embedding
 
 
 def search(query, top_k=3):
 
-    with trace("retrieval"):
+    conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+    cur = conn.cursor()
 
-        conn = psycopg2.connect(os.getenv("DATABASE_URL"))
-        cur = conn.cursor()
+    query_embedding = get_embedding(query)
+    embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
 
-        query_embedding = get_embedding(query)
-        embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
+    cur.execute("""
+        SELECT c.content, d.name
+        FROM chunks c
+        JOIN documents d ON c.document_id = d.id
+        ORDER BY c.embedding <-> %s::vector
+        LIMIT %s
+    """, (embedding_str, top_k))
 
-        cur.execute("""
-            SELECT c.content, d.name
-            FROM chunks c
-            JOIN documents d ON c.document_id = d.id
-            ORDER BY c.embedding <-> %s::vector
-            LIMIT %s
-        """, (embedding_str, top_k))
+    results = cur.fetchall()
 
-        results = cur.fetchall()
-
-        cur.close()
-        conn.close()
+    cur.close()
+    conn.close()
 
     context_chunks = [
         {"content": r[0], "source": r[1]}
         for r in results
     ]
 
-    with trace("rag_generation"):
-        answer = generate_answer(query, context_chunks)
+    answer = generate_answer(query, context_chunks)
 
     return {
         "query": query,
