@@ -1,23 +1,18 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from agents.orchestrator import orchestrate
-from services.tracing import start_trace, end_trace
+from agents.tracing import trace
 
 router = APIRouter()
 
 
 class QueryRequest(BaseModel):
     query: str
-    top_k: int = 3   # ✅ added back
+    top_k: int = 3
 
 
 @router.post("/query")
 def query_rag(request: QueryRequest):
-    trace = start_trace("orchestrator")
 
-    try:
-        result = orchestrate(request.query, trace, request.top_k)
-        return result
-
-    finally:
-        end_trace(trace)
+    with trace("orchestrator_api"):
+        return orchestrate(request.query, top_k=request.top_k)

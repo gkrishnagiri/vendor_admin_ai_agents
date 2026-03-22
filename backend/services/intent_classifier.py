@@ -1,45 +1,67 @@
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
-from services.tracing import start_span, end_span
+from agents.tracing import trace
 
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-def classify_intent(query: str, trace=None):
-    """
-    Classify user intent into:
-    - RAG
-    - ACTION
-    """
+def classify_intent(query: str):
 
-    span = start_span(trace, "intent_classification")
+    print(f"\n[IntentClassifier] Query: {query}")
 
-    try:
+    with trace("intent_classification"):
+
         prompt = f"""
-Classify the user query into one of the following categories:
+You are an intent classification system.
 
-1. RAG → informational question
-2. ACTION → user wants to perform an action
+Your task is to determine whether the user input is:
 
-Respond with ONLY one word: RAG or ACTION
+1. RAG (Information Intent)
+   - The user is seeking knowledge, explanation, guidance, or understanding
+   - Includes questions about how to perform an action
+   - Includes asking for prerequisites, requirements, steps, or information needed before performing an action
 
-Query:
+2. ACTION (Execution Intent)
+   - The user expects the system to perform an operation or take action
+   - The request is a direct instruction to execute something
+
+---
+
+DECISION GUIDELINES:
+
+- Focus on the user’s goal, not just keywords
+- If the user is asking for understanding, explanation, or guidance → RAG
+- If the user is asking what is needed before doing something → RAG
+- If the user gives a direct command to execute → ACTION
+- If the intent is mixed or unclear → prefer RAG
+
+---
+
+User Input:
 {query}
+
+---
+
+Respond with ONLY one word:
+RAG or ACTION
 """
+
+        print("\n[IntentClassifier] Sending prompt to LLM...")
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are an intent classifier."},
+                {"role": "system", "content": "You are a precise intent classifier."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0
         )
 
-        return response.choices[0].message.content.strip()
+        result = response.choices[0].message.content.strip()
 
-    finally:
-        end_span(span)
+        print(f"[IntentClassifier] LLM Response: {result}")
+
+        return result

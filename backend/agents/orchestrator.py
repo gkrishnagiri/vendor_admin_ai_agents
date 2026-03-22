@@ -1,26 +1,29 @@
 from services.intent_classifier import classify_intent
 from rag.retriever import search
+from agents.tracing import trace
 
 
-def orchestrate(query: str, trace=None, top_k=3):
+def orchestrate(query: str, top_k=3):
 
-    print(f"\n[Orchestrator] Received query: {query}")
+    with trace("orchestrator"):
 
-    intent = classify_intent(query, trace)
+        print(f"\n[Orchestrator] Received query: {query}")
 
-    print(f"[Orchestrator] Detected Intent: {intent}")
+        intent = classify_intent(query)
 
-    if intent == "RAG":
-        return search(query, top_k, trace)
+        print(f"[Orchestrator] Detected Intent: {intent}")
 
-    elif intent == "ACTION":
-        return {
-            "message": "UI actions not implemented yet",
-            "intent": intent
-        }
+        if intent == "RAG":
+            return search(query, top_k)
 
-    else:
-        return {
-            "message": "Could not determine intent",
-            "intent": intent
-        }
+        elif intent == "ACTION":
+            return {
+                "message": "UI actions not implemented yet",
+                "intent": intent
+            }
+
+        else:
+            return {
+                "message": "Could not determine intent",
+                "intent": intent
+            }
