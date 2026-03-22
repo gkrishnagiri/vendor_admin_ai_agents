@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from agents.orchestrator import orchestrate
+from vendor_admin_agents.orchestrator import orchestrate
 from agents.tracing import trace
 
 router = APIRouter()
