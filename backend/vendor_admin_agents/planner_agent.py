@@ -1,5 +1,6 @@
 from openai import OpenAI
 import os
+import json
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,17 +16,15 @@ def plan_actions(query: str):
     prompt = f"""
 You are an AI planning agent.
 
-Your job is to break down a user's request into clear, ordered steps.
+Break down the user request into ordered UI steps.
 
 ---
 
 RULES:
 
-- Output ONLY a list of steps
-- Each step must be simple and actionable
-- Do NOT execute anything
-- Do NOT explain — only steps
-- Keep steps generic (not tied to any specific UI unless mentioned)
+- Output ONLY JSON array
+- Each step must be clear and actionable
+- No explanations
 
 ---
 
@@ -34,16 +33,22 @@ User Request:
 
 ---
 
-Output format (JSON array of steps):
+Output:
 """
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are a precise planning agent."},
+            {"role": "system", "content": "You generate structured plans."},
             {"role": "user", "content": prompt}
         ],
         temperature=0.2
     )
 
-    return response.choices[0].message.content
+    content = response.choices[0].message.content.strip()
+
+    try:
+        return json.loads(content)
+    except Exception:
+        print("[Planner] Failed to parse JSON:", content)
+        return []

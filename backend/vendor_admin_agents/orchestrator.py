@@ -1,6 +1,7 @@
 from services.intent_classifier import classify_intent
 from rag.retriever import search
 from vendor_admin_agents.planner_agent import plan_actions
+from vendor_admin_agents.executor import Executor
 
 
 def orchestrate(query: str, top_k=3):
@@ -18,9 +19,15 @@ def orchestrate(query: str, top_k=3):
 
         plan = plan_actions(query)
 
+        print("[Orchestrator] Plan:", plan)
+
+        executor = Executor()
+        execution_result = executor.execute(plan)
+
         return {
             "intent": "ACTION",
-            "plan": plan
+            "plan": plan,
+            "execution": execution_result
         }
 
     else:
